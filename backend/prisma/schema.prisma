@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id         String     @id @default(uuid())
+  name       String
+  email      String     @unique
+  phone      String?
+  userId     String?
+  refferCode String?
+  gender     Gender     @default(Other)
+  password   String
+  address    String?
+  role       UserRole   @default(user)
+  userStatus UserStatus @default(Active)
+  branchId   String?
+  branch     Branch?    @relation(fields: [branchId], references: [id])
+}
+
+model Category {
+  id            String        @id @default(uuid())
+  name          String
+  photos        String?
+  subCategories SubCategory[] @relation("CategorySubCategories")
+  products      Product[]     @relation("CategoryProducts")
+  createdAt     DateTime      @default(now())
+
+  Product Product[]
+}
+
+model SubCategory {
+  id         String    @id @default(uuid())
+  name       String
+  photos     String?
+  categoryId String
+  products   Product[] @relation("SubCategoryProducts")
+  createdAt  DateTime  @default(now())
+
+  category Category @relation("CategorySubCategories", fields: [categoryId], references: [id])
+
+  Product Product[]
+}
+
+model Product {
+  id            String       @id @default(uuid())
+  name          String
+  sizes         String[]
+  colors        String[]
+  discountPrice String?
+  latest        String       @default("no")
+  stock         String       @default("yes")
+  feature       String       @default("yes")
+  flashsale     String       @default("no")
+  discountType  String       @default("no")
+  views         Int          @default(0)
+  desc          String?
+  fulldesc      String?
+  price         String
+  photos        String[]
+  userInfo      Json?
+  status        String       @default("Active")
+  categoryId    String
+  subcategoryId String?
+  branchId      String?
+  reviewId      String?
+  category      Category     @relation(fields: [categoryId], references: [id])
+  subcategory   SubCategory? @relation(fields: [subcategoryId], references: [id])
+  branch        Branch?      @relation(fields: [branchId], references: [id])
+  review        Review?      @relation(fields: [reviewId], references: [id])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  Category Category[] @relation("CategoryProducts")
+
+  SubCategory SubCategory[] @relation("SubCategoryProducts")
+}
+
+model Branch {
+  id       String    @id @default(uuid())
+  name     String
+  products Product[]
+
+  User User[]
+}
+
+model Review {
+  id       String    @id @default(uuid())
+  content  String
+  products Product[]
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+}
+
+enum UserRole {
+  superAdmin
+  admin
+  user
+  manager
+  vendor
+  schoolManager
+}
+
+enum UserStatus {
+  Active
+  Deactive
+  Blocked
+}
